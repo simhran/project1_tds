@@ -1,20 +1,33 @@
-FROM python:3.13
+FROM python:3.12-slim-bookworm
 
-# Set working directory
-WORKDIR /app
+# The installer requires curl (and certificates) to download the release archive
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+# Download the latest installer
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
 
-# Copy project files
-COPY proj01.py /app/proj01.py
-COPY requirements.txt /app/requirements.txt
+
+# Run the installer then remove it
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+
 
 # Ensure /data directory exists
 RUN mkdir -p /data
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+
+# Ensure the installed binary is on the `PATH`
+ENV PATH="/root/.local/bin/:$PATH"
+
+
 
 # Expose port
 EXPOSE 8000
 
-# Command to run the FastAPI server
-CMD ["uv", "proj01:app", "--host", "0.0.0.0", "--port", "8000"]
+
+WORKDIR /app
+COPY proj01.py /app
+COPY datagen.py /data
+COPY evaluate.py /data
+
+RUN pip install --no-cache-dir fastapi uvicorn requests
+CMD ["uv","run","proj01.py"]
