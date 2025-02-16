@@ -1,0 +1,8 @@
+flask
+requests
+python=">=3.13"
+fastapi
+uvicorn
+pydantic
+starlette
+
